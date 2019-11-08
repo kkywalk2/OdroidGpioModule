@@ -5,6 +5,7 @@
 #include <asm/uaccess.h>                    /* copy_to_user( ), copy_from_user( ) 커널 함수 */
 
 
+//오드로이드의 GPIOY뱅크의 3번 핀에 연결된 LED를 제어하는 드라이버
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("KKY");
 MODULE_DESCRIPTION("ODROID C1 GPIO LED Device Module");
@@ -72,7 +73,13 @@ static int gpio_close(struct inode *inod, struct file *fil)
 static ssize_t gpio_read(struct file *inode, char *buff, size_t len, loff_t *off)
 {
     int count = 0;
-
+	int value = (*(gpio+GPIOY_OUTP_REG_OFFSET) & (1 << GPIO_LED)) >> GPIO_LED;
+	
+	if(value)
+		count = copy_to_user("1", buff, len);
+	else
+		count = copy_to_user("0", buff, len);
+	
     return count;
 }
 
@@ -125,7 +132,7 @@ int initModule(void)
 
     gpio = (volatile unsigned int *)map;
 
-	//초기화 코드 필요
+	//GPIO 관련 출력 혹은 입력으로 변경하는 초기화 코드 필요
     //GPIO_IN(GPIO_LED);                                               /* LED 사용을 위한 초기화 */
     //GPIO_OUT(GPIO_LED);
 
